@@ -1,0 +1,1 @@
+export { default, COL_TYPES } from './src/DataTable';
