@@ -1,2 +1,2 @@
 # Reci
-Mobile app to store and reference recipes. 
+Mobile app created with React/React Native to store and reference recipes. 
