@@ -1,7 +1,10 @@
+// React
 import React from "react";
 
+// React Native
 import { StyleSheet, Text, View, Image, Pressable } from "react-native";
 
+// Other Files & Components
 import colors from "../config/colors";
 
 export default function Login({ navigation }) {

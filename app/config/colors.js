@@ -8,4 +8,5 @@ export default {
   readBold: "#503D42",
   grey: "#EFEFEF",
   errorRed: "#ED5858",
+  black: "#000000",
 };

@@ -1,5 +1,8 @@
+// React
+import { useEffect, useState } from "react";
+
+// React Native
 import {
-  TouchableHighlight,
   View,
   Text,
   TextInput,
@@ -7,14 +10,18 @@ import {
   KeyboardAvoidingView,
   ScrollView,
 } from "react-native";
-import { SelectList } from "react-native-dropdown-select-list";
+import RNPickerSelect from "react-native-picker-select";
+import { IconButton } from "react-native-paper";
 
-import { useState } from "react";
-
+// Other Files & Components
 import colors from "../config/colors";
+
+// Redux
+import { fetchRecipes } from "../util/http";
 
 export default function RecipeInput(props, { navigation }) {
   // Create Recipe Object
+
   const [recipe, setRecipe] = useState({
     id: null,
     name: "",
@@ -23,17 +30,33 @@ export default function RecipeInput(props, { navigation }) {
     category: "",
   });
 
+  let [selectedCategory, setSelectedCategory] = useState("");
+
   // Set Categories
   const categories = [
-    { key: "1", value: "Breakfast" },
-    { key: "2", value: "Lunch" },
-    { key: "3", value: "Dinner" },
-    { key: "4", value: "Snack" },
-    { key: "5", value: "Appetizer" },
-    { key: "6", value: "Dessert" },
-    { key: "7", value: "Drinks" },
+    { label: "Breakfast", value: "Breakfast" },
+    { label: "Lunch", value: "Lunch" },
+    { label: "Dinner", value: "Dinner" },
+    { label: "Snack", value: "Snack" },
+    { label: "Appetizer", value: "Appetizer" },
+    { label: "Dessert", value: "Dessert" },
+    { label: "Drinks", value: "Drinks" },
   ];
-  let [selectedCategory, setSelectedCategory] = useState("");
+
+  useEffect(() => {
+    // Auto-populate inputs from selected recipe
+    if (props.isUpdate === true) {
+      async function getRecipe() {
+        const recipes = await fetchRecipes();
+        const id = recipes.findIndex((recipe) => recipe.id === props.recipe.id);
+        setRecipe(recipes[id]);
+        setSelectedCategory(props.category);
+        recipeSelectHandler(selectedCategory);
+      }
+
+      void getRecipe();
+    }
+  }, []);
 
   function recipeInputHandler(inputIdentifier, enteredValue) {
     setRecipe((currentInputValues) => {
@@ -55,6 +78,7 @@ export default function RecipeInput(props, { navigation }) {
 
   function addRecipeHandler() {
     props.onAddRecipe(recipe);
+
     setRecipe({
       id: null,
       name: "",
@@ -62,6 +86,10 @@ export default function RecipeInput(props, { navigation }) {
       steps: "",
       category: "",
     });
+  }
+
+  function updateRecipeHandler() {
+    props.onUpdateRecipe(recipe);
   }
 
   return (
@@ -84,17 +112,17 @@ export default function RecipeInput(props, { navigation }) {
               inputMode="text"
             />
           </View>
+          <Text style={styles.individualLabel}>Category</Text>
           <View style={styles.selectContainer}>
-            <Text>Category</Text>
-            <SelectList
-              setSelected={(val) => setSelectedCategory(val)}
-              data={categories}
-              save="value"
-              boxStyles={styles.inputSmall}
-              dropdownStyles={styles.inputLarge}
-              dropdownTextStyles={{ left: -10 }}
-              placeholder="Select Category"
-              onSelect={recipeSelectHandler}
+            <RNPickerSelect
+              onValueChange={(value) => setSelectedCategory(value)}
+              items={categories}
+              onDonePress={recipeSelectHandler}
+              value={selectedCategory}
+              placeholder={{
+                label: props.category,
+                value: props.category,
+              }}
             />
           </View>
           <View style={styles.inputContainer}>
@@ -121,57 +149,55 @@ export default function RecipeInput(props, { navigation }) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      <TouchableHighlight
-        style={styles.createBanner}
-        onPress={addRecipeHandler}
-      >
-        <Text style={styles.createLabel}>Create</Text>
-      </TouchableHighlight>
+      <View style={styles.buttonContainer}>
+        {!props.isUpdate ? (
+          <View>
+            <IconButton
+              size={40}
+              icon="check"
+              iconColor={colors.white}
+              backgroundColor={colors.actionBold}
+              onPress={addRecipeHandler}
+            />
+          </View>
+        ) : null}
+        {props.isUpdate ? (
+          <IconButton
+            size={40}
+            icon="content-save"
+            iconColor={colors.white}
+            backgroundColor={colors.actionBold}
+            onPress={updateRecipeHandler}
+          />
+        ) : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
-    backgroundColor: colors.base,
-    flex: 1,
-    width: "100%",
-    height: "100%",
-    alignItems: "center",
+  buttonContainer: {
+    position: "absolute",
+    marginHorizontal: 60,
+    marginVertical: 593,
   },
   backgroundContainer: {
-    backgroundColor: colors.white,
     width: "100%",
     flex: 1,
   },
   container: {
-    backgroundColor: colors.white,
-    width: "100%",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
+    width: "90%",
     flex: 1,
   },
-  createBanner: {
-    backgroundColor: colors.actionBold,
-    width: "100%",
-    height: 50,
-    justifyContent: "flex-end",
-    marginVertical: 30,
-    alignItems: "center",
-  },
-  createLabel: {
-    fontSize: 24,
-    fontWeight: "bold",
-    justifyContent: "center",
-    color: colors.white,
-    bottom: 10,
-  },
   inputContainer: {
-    backgroundColor: colors.white,
-    width: "90%",
+    width: "100%",
     alignItems: "flex-start",
     marginVertical: 20,
-    left: 20,
+  },
+  individualLabel: {
+    width: "90%",
+    alignItems: "flex-start",
+    marginVertical: 5,
   },
   inputLarge: {
     borderWidth: 1,
@@ -196,7 +222,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   selectContainer: {
-    width: "90%",
-    left: 20,
+    fontSize: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: colors.grey,
+    backgroundColor: colors.grey,
+    borderRadius: 5,
+    color: "black",
+    paddingRight: 30,
+    width: "100%",
   },
 });

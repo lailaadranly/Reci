@@ -1,7 +1,19 @@
+// React
 import React, { useState, useEffect } from "react";
+
+// React Native
 import { StyleSheet, Text, View, SafeAreaView, Pressable } from "react-native";
-import RecipeInput from "../components/RecipeInput";
+import { IconButton } from "react-native-paper";
+
+// Redux
+import { storeRecipe } from "../util/http";
+import { useDispatch } from "react-redux";
+import { addRecipe, removeRecipe } from "../store/redux/recipesSlice";
+
+// Other Files & Components
 import colors from "../config/colors";
+import RecipeInput from "../components/RecipeInput";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function CreateRecipe({
   navigation,
@@ -10,7 +22,11 @@ export default function CreateRecipe({
 }) {
   let [recipeList, setRecipeList] = useState([]);
 
-  function addRecipeHandler(recipe) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const dispatch = useDispatch();
+
+  async function addRecipeHandler(recipe) {
     setRecipeList((currentRecipeList) => [
       ...currentRecipeList,
       {
@@ -18,20 +34,30 @@ export default function CreateRecipe({
         ingredients: recipe.ingredients,
         steps: recipe.steps,
         category: recipe.category,
-        id: Math.random().toString(),
       },
     ]);
+    setIsSubmitting(true);
+
+    // POST to Firebase (Change to Google Cloud)
+    const id = await storeRecipe(recipe);
+    setIsSubmitting(false);
+
+    // Store in Redux context with id from Firebase
+    dispatch(addRecipe({ ...recipe, id: id }));
   }
 
   useEffect(() => {
     setRecipeList(route.params.list);
 
     if (recipeList.length > route.params.list.length) {
-      navigation.navigate("MyCookbook", {
-        list: recipeList,
-      });
+      navigation.navigate("MyCookbook");
     }
   }, [recipeList]);
+
+  // Display Spinner when Fetching
+  if (isSubmitting) {
+    return <LoadingOverlay />;
+  }
 
   return (
     <View style={styles.background}>
@@ -40,9 +66,15 @@ export default function CreateRecipe({
           <Text style={styles.headerTitle}>Add New Recipe</Text>
         </View>
         <RecipeInput onAddRecipe={addRecipeHandler} />
-        <Pressable style={styles.cancelBanner} onPress={() => goBack()}>
-          <Text style={styles.cancelLabel}>Cancel</Text>
-        </Pressable>
+        <View style={styles.buttonContainer}>
+          <IconButton
+            size={40}
+            icon="cancel"
+            iconColor={colors.white}
+            backgroundColor={colors.errorRed}
+            onPress={() => goBack()}
+          />
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -56,6 +88,11 @@ const styles = StyleSheet.create({
     height: "100%",
     alignItems: "center",
   },
+  buttonContainer: {
+    position: "absolute",
+    left: 10,
+    marginVertical: 683,
+  },
   backgroundContainer: {
     backgroundColor: colors.white,
     width: "90%",
@@ -64,21 +101,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     position: "absolute",
-  },
-  cancelBanner: {
-    backgroundColor: colors.errorRed,
-    width: "100%",
-    height: 50,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    bottom: 10,
-  },
-  cancelLabel: {
-    fontSize: 24,
-    fontWeight: "bold",
-    justifyContent: "center",
-    color: colors.white,
-    bottom: 10,
   },
   headerBanner: {
     backgroundColor: colors.actionLight,
