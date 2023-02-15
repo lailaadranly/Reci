@@ -4,15 +4,18 @@ import { useState } from "react";
 // React Native
 import { View, StyleSheet, Pressable, Text } from "react-native";
 import { IconButton } from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
 
 // Other Files & Components
 import colors from "../config/colors";
 
-export default function RecipeItem(props) {
+export default function RecipeItem({ Recipe, onDeleteRecipe }) {
+  const navigation = useNavigation();
+
   const [showDelete, setShowDelete] = useState(false);
 
   function deleteRecipeHandler() {
-    props.onDeleteRecipe(props.recipe);
+    onDeleteRecipe(Recipe);
   }
 
   function displayDelete() {
@@ -27,19 +30,15 @@ export default function RecipeItem(props) {
     <View>
       <Pressable
         onPress={() =>
-          props.navigation.navigate("RecipeDetail", {
-            showRecipe: props.recipe,
+          navigation.navigate("RecipeDetail", {
+            showRecipe: Recipe,
           })
         }
         onLongPress={displayDelete}
         style={styles.recipeContainer}
       >
         <View style={styles.recipe}>
-          <Text style={styles.recipeText}>
-            {props.recipe.name.length >= 38
-              ? props.recipe.name.slice(0, 37) + "..."
-              : props.recipe.name}
-          </Text>
+          <Text style={styles.recipeText}>{Recipe.name}</Text>
         </View>
         {showDelete ? (
           <View style={styles.iconContainer}>

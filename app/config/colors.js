@@ -7,6 +7,7 @@ export default {
   readLight: "#986C6A",
   readBold: "#503D42",
   grey: "#EFEFEF",
+  darkGrey: "#666666",
   errorRed: "#ED5858",
   black: "#000000",
 };

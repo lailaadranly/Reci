@@ -1,26 +1,53 @@
 // React
 import React from "react";
+import { useState } from "react";
 
 // React Native
-import { StyleSheet, Text, View, Image, Pressable } from "react-native";
+import { StyleSheet, Text, View, Alert } from "react-native";
+
+// Redux
+import { useDispatch } from "react-redux";
+import { authenticate } from "../store/authSlice";
+import { login } from "../util/auth";
 
 // Other Files & Components
 import colors from "../config/colors";
+import AuthContent from "../components/AuthContent";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function Login({ navigation }) {
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const dispatch = useDispatch();
+
+  async function loginHandler({ email, password }) {
+    setIsAuthenticating(true);
+    try {
+      const response = await login(email, password);
+      dispatch(
+        authenticate({ token: response.token, userId: response.userId })
+      );
+    } catch (error) {
+      Alert.alert(
+        "Authentication Failed",
+        "Could not log you in, plese try again with valid credentials."
+      );
+      setIsAuthenticating(false);
+    }
+  }
+
+  if (isAuthenticating) {
+    return <LoadingOverlay />;
+  }
+
   return (
     <View style={styles.background}>
-      <View style={styles.backgroundContainer}>
+      <View style={styles.container}>
         <Text style={styles.title}>RECI</Text>
-        <Text style={styles.subheading}>Anyone can cook.</Text>
+        <Text style={styles.subheading}>Login here.</Text>
+        <View style={styles.backgroundContainer}>
+          <AuthContent isLogin={true} onAuthenticate={loginHandler} />
+        </View>
       </View>
-      <Image style={styles.logo} source={require("../assets/logo.png")}></Image>
-      <Pressable
-        style={styles.loginButton}
-        onPress={() => navigation.navigate("MyCookbook", { prev: "Login" })}
-      >
-        <Text style={styles.buttonLabel}>Get Started</Text>
-      </Pressable>
     </View>
   );
 }
@@ -31,34 +58,24 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
-  backgroundContainer: {
+  container: {
     marginVertical: 100,
-    alignItems: "center",
-  },
-  buttonLabel: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: colors.white,
-    bottom: 25,
-  },
-  loginButton: {
-    backgroundColor: colors.actionBold,
     width: "100%",
-    height: 90,
-    justifyContent: "flex-end",
-    margin: 100,
     alignItems: "center",
   },
-  logo: {
-    width: 250,
-    height: 250,
+  backgroundContainer: {
     alignItems: "center",
+    backgroundColor: colors.white,
+    width: "90%",
+    height: "80%",
+    borderRadius: 20,
   },
   subheading: {
     fontSize: 24,
     fontWeight: "bold",
     justifyContent: "center",
     color: colors.white,
+    margin: 10,
   },
   title: {
     fontSize: 64,

@@ -7,8 +7,8 @@ import { StyleSheet, Text, View, ScrollView } from "react-native";
 // Other Files & Components
 import colors from "../config/colors";
 
-export default function RecipeReadOnly(props) {
-  let recipeData = props.recipe;
+export default function RecipeReadOnly({ Recipe }) {
+  let recipeData = Recipe;
   return (
     <View style={styles.displayContainer}>
       <ScrollView>

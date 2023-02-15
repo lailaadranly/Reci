@@ -3,13 +3,13 @@ import React from "react";
 import { useState } from "react";
 
 // React Native
-import { StyleSheet, Text, View, SafeAreaView } from "react-native";
+import { StyleSheet, Text, View, SafeAreaView, Alert } from "react-native";
 import { IconButton } from "react-native-paper";
 
 // Redux
 import { useDispatch, useSelector } from "react-redux";
-import { addFavorite, removeFavorite } from "../store/redux/favorites";
-import { removeRecipe, modifyRecipe } from "../store/redux/recipesSlice";
+import { addFavorite, removeFavorite } from "../store/favoritesSlice";
+import { removeRecipe, modifyRecipe } from "../store/recipesSlice";
 import { updateRecipe, deleteRecipe } from "../util/http";
 
 // Other Files & Components
@@ -24,6 +24,11 @@ export default function RecipeDetail({
   route,
 }) {
   let recipe = route.params.showRecipe;
+
+  const [recipeInvalid, setRecipeInvalid] = useState({
+    name: false,
+    category: false,
+  });
 
   // Setup
   const dispatch = useDispatch();
@@ -41,6 +46,24 @@ export default function RecipeDetail({
   }
 
   async function updateRecipeHandler(recipe) {
+    let { name, category, ingredients, steps } = recipe;
+
+    const nameIsValid = name.length > 0;
+    const categoryIsValid = category != "";
+
+    if (!nameIsValid || !categoryIsValid) {
+      Alert.alert(
+        "Recipe Incomplete",
+        "Please enter a name and category before saving."
+      );
+      setRecipeInvalid({
+        name: !nameIsValid,
+        category: !categoryIsValid,
+      });
+      return;
+    }
+
+    // Recipe is Valid, Update
     setIsUpdating(true);
     // Update in Redux
     dispatch(modifyRecipe(recipe));
@@ -88,13 +111,14 @@ export default function RecipeDetail({
             onPress={changeFavoriteStatusHandler}
           />
         </View>
-        {!isUpdate ? <RecipeReadOnly recipe={recipe} /> : null}
+        {!isUpdate ? <RecipeReadOnly Recipe={recipe} /> : null}
         {isUpdate ? (
           <RecipeInput
-            recipe={recipe}
+            Recipe={recipe}
             isUpdate={isUpdate}
             onUpdateRecipe={updateRecipeHandler}
-            category={recipe.category}
+            Category={recipe.category}
+            recipeInvalid={recipeInvalid}
           />
         ) : null}
         <View style={styles.buttonContainer}>

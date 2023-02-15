@@ -2,13 +2,20 @@
 import React, { useState, useEffect } from "react";
 
 // React Native
-import { StyleSheet, Text, View, SafeAreaView, Pressable } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  Pressable,
+  Alert,
+} from "react-native";
 import { IconButton } from "react-native-paper";
 
 // Redux
 import { storeRecipe } from "../util/http";
 import { useDispatch } from "react-redux";
-import { addRecipe, removeRecipe } from "../store/redux/recipesSlice";
+import { addRecipe } from "../store/recipesSlice";
 
 // Other Files & Components
 import colors from "../config/colors";
@@ -21,12 +28,34 @@ export default function CreateRecipe({
   route,
 }) {
   let [recipeList, setRecipeList] = useState([]);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const dispatch = useDispatch();
 
+  const [recipeInvalid, setRecipeInvalid] = useState({
+    name: false,
+    category: false,
+  });
+
   async function addRecipeHandler(recipe) {
+    // Validate Recipe Inputs
+    let { name, category, ingredients, steps } = recipe;
+
+    const nameIsValid = name.length > 0;
+    const categoryIsValid = category != "";
+
+    if (!nameIsValid || !categoryIsValid) {
+      Alert.alert(
+        "Recipe Incomplete",
+        "Please enter a name and category before saving."
+      );
+      setRecipeInvalid({
+        name: !nameIsValid,
+        category: !categoryIsValid,
+      });
+      return;
+    }
+
+    // Recipe is Valid, save to List
     setRecipeList((currentRecipeList) => [
       ...currentRecipeList,
       {
@@ -65,7 +94,10 @@ export default function CreateRecipe({
         <View style={styles.headerBanner}>
           <Text style={styles.headerTitle}>Add New Recipe</Text>
         </View>
-        <RecipeInput onAddRecipe={addRecipeHandler} />
+        <RecipeInput
+          onAddRecipe={addRecipeHandler}
+          recipeInvalid={recipeInvalid}
+        />
         <View style={styles.buttonContainer}>
           <IconButton
             size={40}
@@ -88,11 +120,6 @@ const styles = StyleSheet.create({
     height: "100%",
     alignItems: "center",
   },
-  buttonContainer: {
-    position: "absolute",
-    left: 10,
-    marginVertical: 683,
-  },
   backgroundContainer: {
     backgroundColor: colors.white,
     width: "90%",
@@ -101,6 +128,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     position: "absolute",
+  },
+  buttonContainer: {
+    position: "absolute",
+    left: 10,
+    marginVertical: 683,
   },
   headerBanner: {
     backgroundColor: colors.actionLight,

@@ -9,39 +9,45 @@ import {
   SafeAreaView,
   FlatList,
   Pressable,
+  Image,
 } from "react-native";
+import { IconButton } from "react-native-paper";
 
 // Redux
 import { fetchRecipes, deleteRecipe } from "../util/http";
-import { setRecipes, removeRecipe } from "../store/redux/recipesSlice";
+import { setRecipes, removeRecipe } from "../store/recipesSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../store/authSlice";
 
 // Other Files & Components
 import RecipeItem from "../components/RecipeItem";
 import LoadingOverlay from "../components/LoadingOverlay";
 import colors from "../config/colors";
 
-export default function MyCookbook({ navigation, route }) {
+export default function MyCookbook({ navigation }) {
   const [isFetching, setIsFetching] = useState(true);
   const dispatch = useDispatch();
+  const recipeList = useSelector((state) => state.recipes.allRecipes);
 
   useEffect(() => {
     // GET data from Firebase
     async function getRecipes() {
       setIsFetching(true);
       const recipes = await fetchRecipes();
-      setIsFetching(false);
       dispatch(setRecipes(recipes));
+      setIsFetching(false);
     }
 
     void getRecipes();
   }, []);
 
-  const recipeList = useSelector((state) => state.recipes.allRecipes);
-
   async function deleteRecipeHandler(recipe) {
     dispatch(removeRecipe(recipe));
     await deleteRecipe(recipe.id);
+  }
+
+  function logoutHandler() {
+    dispatch(logout());
   }
 
   // Display Spinner when Fetching
@@ -61,9 +67,7 @@ export default function MyCookbook({ navigation, route }) {
           renderItem={(recipeData) => {
             return (
               <RecipeItem
-                recipe={recipeData.item}
-                navigation={navigation}
-                list={recipeList}
+                Recipe={recipeData.item}
                 onDeleteRecipe={deleteRecipeHandler}
               />
             );
@@ -74,14 +78,27 @@ export default function MyCookbook({ navigation, route }) {
           alwaysBounceVertical={false}
         />
 
-        <Pressable
-          style={styles.addRecipeBanner}
-          onPress={() =>
-            navigation.navigate("CreateRecipe", { list: recipeList })
-          }
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+          }}
         >
-          <Text style={styles.buttonLabel}>Add New Recipe</Text>
-        </Pressable>
+          <Pressable
+            style={styles.addRecipeBanner}
+            onPress={() =>
+              navigation.navigate("CreateRecipe", { list: recipeList })
+            }
+          >
+            <Text style={styles.buttonLabel}>Add New Recipe</Text>
+          </Pressable>
+          <IconButton
+            icon="logout"
+            iconColor={colors.actionBold}
+            size={40}
+            onPress={logoutHandler}
+          />
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -98,22 +115,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 40,
   },
-  editBanner: {
-    backgroundColor: colors.actionBold,
-    width: "40%",
-    height: 40,
-    justifyContent: "flex-end",
-    marginVertical: 10,
-    alignItems: "center",
-    borderRadius: 40,
-  },
-  buttonLabel: {
-    fontSize: 24,
-    fontWeight: "bold",
-    justifyContent: "center",
-    color: colors.white,
-    bottom: 10,
-  },
   background: {
     backgroundColor: colors.base,
     flex: 1,
@@ -128,6 +129,13 @@ const styles = StyleSheet.create({
     marginVertical: 60,
     borderRadius: 20,
     alignItems: "center",
+  },
+  buttonLabel: {
+    fontSize: 24,
+    fontWeight: "bold",
+    justifyContent: "center",
+    color: colors.white,
+    bottom: 10,
   },
   headerBanner: {
     backgroundColor: colors.readBold,
