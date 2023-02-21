@@ -38,8 +38,12 @@ export default function MyCookbook({ navigation }) {
   useEffect(() => {
     async function getRecipes() {
       setIsFetching(true);
-      const recipes = await fetchRecipes();
-      dispatch(setRecipes(recipes));
+      try {
+        const recipes = await fetchRecipes();
+        dispatch(setRecipes(recipes));
+      } catch (error) {
+        navigation.navigate("Settings");
+      }
       setIsFetching(false);
     }
 
