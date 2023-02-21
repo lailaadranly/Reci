@@ -19,7 +19,7 @@ async function authenticate(mode, email, password) {
   return responseData;
 }
 
-export async function createUser(email, password) {
+export function createUser(email, password) {
   return authenticate("signUp", email, password);
 }
 

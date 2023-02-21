@@ -1,5 +1,5 @@
 // React
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 
 // React Native
@@ -10,7 +10,7 @@ import { IconButton } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { addFavorite, removeFavorite } from "../store/favoritesSlice";
 import { removeRecipe, modifyRecipe } from "../store/recipesSlice";
-import { updateRecipe, deleteRecipe } from "../util/http";
+import { fetchRecipes, updateRecipe, deleteRecipe } from "../util/http";
 
 // Other Files & Components
 import colors from "../config/colors";
@@ -23,42 +23,62 @@ export default function RecipeDetail({
   navigation,
   route,
 }) {
-  let recipe = route.params.showRecipe;
+  const [recipe, setRecipe] = useState({
+    id: route.params.showRecipe.id,
+    name: "",
+    ingredients: "",
+    steps: "",
+    favorite: null,
+    totalTime: "",
+    numServed: "",
+  });
 
   const [recipeInvalid, setRecipeInvalid] = useState({
     name: false,
-    category: false,
+    totalTime: false,
+    numServed: false,
   });
 
   // Setup
   const dispatch = useDispatch();
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  // Favorite Setup
-  const favoriteRecipeIds = useSelector((state) => state.favoriteRecipes.ids);
-  const recipeIsFavorite = favoriteRecipeIds.includes(recipe.id);
+  const [isUpdating, setIsUpdating] = useState(true);
 
   // Constants
   const [isUpdate, setIsUpdate] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    async function getRecipe() {
+      const recipes = await fetchRecipes();
+      const id = recipes.findIndex((rec) => rec.id === recipe.id);
+      setRecipe(recipes[id]);
+      setIsFavorite(recipes[id].favorite);
+      setIsUpdating(false);
+    }
+
+    void getRecipe();
+  }, []);
 
   function editRecipeHandler() {
     setIsUpdate(true);
   }
 
   async function updateRecipeHandler(recipe) {
-    let { name, category, ingredients, steps } = recipe;
+    let { name, ingredients, steps, favorite, totalTime, numServed } = recipe;
 
     const nameIsValid = name.length > 0;
-    const categoryIsValid = category != "";
+    const timeIsValid = totalTime.length > 0;
+    const numServedIsValid = numServed.length > 0;
 
-    if (!nameIsValid || !categoryIsValid) {
+    if (!nameIsValid || !timeIsValid || !numServedIsValid) {
       Alert.alert(
         "Recipe Incomplete",
-        "Please enter a name and category before saving."
+        "Please enter a name, total time, and number served before saving."
       );
       setRecipeInvalid({
         name: !nameIsValid,
-        category: !categoryIsValid,
+        totalTime: !timeIsValid,
+        numServed: !numServedIsValid,
       });
       return;
     }
@@ -67,7 +87,7 @@ export default function RecipeDetail({
     setIsUpdating(true);
     // Update in Redux
     dispatch(modifyRecipe(recipe));
-    // Post update to Firebase (conver to Google Cloud later)
+    // Post update to Firebase
     await updateRecipe(recipe.id, recipe);
     setIsUpdating(false);
 
@@ -82,12 +102,27 @@ export default function RecipeDetail({
     navigation.goBack();
   }
 
-  function changeFavoriteStatusHandler() {
-    if (recipeIsFavorite) {
-      dispatch(removeFavorite({ id: recipe.id }));
+  // Update Favorite Status
+  async function changeFavoriteStatusHandler() {
+    if (isFavorite) {
+      dispatch(removeFavorite(recipe));
+      setIsFavorite(false);
     } else {
-      dispatch(addFavorite({ id: recipe.id }));
+      dispatch(addFavorite(recipe));
+      setIsFavorite(true);
     }
+
+    // Update the recipe with favorite status
+    setRecipe((currentInputValues) => {
+      return {
+        ...currentInputValues,
+        favorite: isFavorite,
+      };
+    });
+
+    dispatch(modifyRecipe(recipe));
+
+    await updateRecipe(recipe.id, recipe);
   }
 
   // Display Spinner when Updating
@@ -96,58 +131,56 @@ export default function RecipeDetail({
   }
 
   return (
-    <View style={styles.background}>
-      <SafeAreaView style={styles.backgroundContainer}>
-        <View style={styles.headerBanner}>
-          <Text style={styles.headerTitle}>
-            {recipe.name.length >= 22
-              ? recipe.name.slice(0, 21) + "..."
-              : recipe.name}
-          </Text>
-          <IconButton
-            style={{ left: 5 }}
-            icon={recipeIsFavorite ? "star" : "star-outline"}
-            iconColor="white"
-            onPress={changeFavoriteStatusHandler}
-          />
-        </View>
+    <SafeAreaView style={styles.background}>
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerTitle}>
+          {recipe.name.length >= 22
+            ? recipe.name.slice(0, 21) + "..."
+            : recipe.name}
+        </Text>
+        <IconButton
+          icon={isFavorite ? "star" : "star-outline"}
+          iconColor="white"
+          onPress={changeFavoriteStatusHandler}
+          size={30}
+        />
+        <IconButton
+          icon="arrow-left"
+          iconColor={colors.white}
+          size={35}
+          onPress={() => goBack()}
+        />
+      </View>
+
+      <View style={styles.displayContainer}>
         {!isUpdate ? <RecipeReadOnly Recipe={recipe} /> : null}
         {isUpdate ? (
           <RecipeInput
             Recipe={recipe}
             isUpdate={isUpdate}
             onUpdateRecipe={updateRecipeHandler}
-            Category={recipe.category}
             recipeInvalid={recipeInvalid}
           />
         ) : null}
-        <View style={styles.buttonContainer}>
-          {!isUpdate ? (
-            <IconButton
-              size={40}
-              icon="square-edit-outline"
-              iconColor={colors.white}
-              backgroundColor={colors.actionBold}
-              onPress={editRecipeHandler}
-            />
-          ) : null}
+      </View>
+
+      <View style={styles.buttonContainer}>
+        {!isUpdate ? (
           <IconButton
-            size={40}
-            icon="trash-can"
+            size={35}
+            icon="square-edit-outline"
             iconColor={colors.white}
-            backgroundColor={colors.errorRed}
-            onPress={deleteRecipeHandler}
+            onPress={editRecipeHandler}
           />
-          <IconButton
-            size={40}
-            icon="book-open-variant"
-            iconColor={colors.white}
-            backgroundColor={colors.readLight}
-            onPress={() => goBack()}
-          />
-        </View>
-      </SafeAreaView>
-    </View>
+        ) : null}
+        <IconButton
+          icon="trash-can"
+          iconColor={colors.white}
+          onPress={deleteRecipeHandler}
+          size={35}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -159,33 +192,24 @@ const styles = StyleSheet.create({
     height: "100%",
     alignItems: "center",
   },
-  backgroundContainer: {
-    backgroundColor: colors.white,
-    width: "90%",
-    height: "90%",
-    marginVertical: 60,
-    borderRadius: 20,
-    alignItems: "center",
-    position: "absolute",
-  },
   buttonContainer: {
     flexDirection: "row",
-    position: "absolute",
-    marginVertical: 683,
-    right: 70,
   },
-  headerBanner: {
-    backgroundColor: colors.readBold,
-    width: "100%",
-    height: 50,
-    marginVertical: 20,
-    justifyContent: "center",
+  displayContainer: {
+    backgroundColor: colors.white,
+    width: "90%",
+    height: "85%",
+    borderRadius: 20,
+  },
+  headerContainer: {
     flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "90%",
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: colors.white,
-    top: 10,
   },
 });

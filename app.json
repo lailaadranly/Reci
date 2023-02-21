@@ -3,8 +3,9 @@
     "name": "Reci",
     "slug": "Reci",
     "version": "1.0.0",
+    "description": "An application to store recipes.",
     "orientation": "portrait",
-    "icon": "./app/assets/icon.png",
+    "icon": "./app/assets/reci-icon.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./app/assets/splash.png",
@@ -18,7 +19,8 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lailaadranly.Reci"
     },
     "android": {
       "adaptiveIcon": {
@@ -28,6 +30,11 @@
     },
     "web": {
       "favicon": "./app/assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "78e4ff06-0638-48cb-8e64-53e0ae7d1656"
+      }
     }
   }
 }

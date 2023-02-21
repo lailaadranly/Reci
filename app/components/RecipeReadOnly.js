@@ -8,21 +8,21 @@ import { StyleSheet, Text, View, ScrollView } from "react-native";
 import colors from "../config/colors";
 
 export default function RecipeReadOnly({ Recipe }) {
-  let recipeData = Recipe;
   return (
-    <View style={styles.displayContainer}>
+    <View>
       <ScrollView>
         <View style={styles.readOnlyText}>
-          <Text style={styles.textHeader}>Category</Text>
-          <Text>{recipeData.category}</Text>
+          <Text style={styles.smallHeader}>
+            Takes {Recipe.totalTime} minutes for {Recipe.numServed} people
+          </Text>
         </View>
         <View style={styles.readOnlyText}>
-          <Text style={styles.textHeader}>Ingredients</Text>
-          <Text>{recipeData.ingredients}</Text>
+          <Text style={styles.largeHeader}>Ingredients</Text>
+          <Text>{Recipe.ingredients}</Text>
         </View>
         <View style={styles.readOnlyText}>
-          <Text style={styles.textHeader}>Steps</Text>
-          <Text>{recipeData.steps}</Text>
+          <Text style={styles.largeHeader}>Steps</Text>
+          <Text>{Recipe.steps}</Text>
         </View>
       </ScrollView>
     </View>
@@ -33,13 +33,19 @@ const styles = StyleSheet.create({
   displayContainer: {
     backgroundColor: colors.white,
     width: "90%",
-    height: "78%",
+    height: "85%",
+    borderRadius: 20,
   },
   readOnlyText: {
-    margin: 8,
+    margin: 15,
   },
-  textHeader: {
+  largeHeader: {
     fontWeight: "bold",
     fontSize: 18,
+  },
+  smallHeader: {
+    //fontWeight: "bold",
+    fontStyle: "italic",
+    fontSize: 16,
   },
 });

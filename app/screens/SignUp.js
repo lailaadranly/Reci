@@ -15,9 +15,11 @@ import AuthContent from "../components/AuthContent";
 import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function SignUp({ navigation }) {
+  // Constants
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const dispatch = useDispatch();
 
+  // SignUp
   async function signupHandler({ email, password }) {
     setIsAuthenticating(true);
     try {
@@ -26,14 +28,22 @@ export default function SignUp({ navigation }) {
         authenticate({ token: response.token, userId: response.userId })
       );
     } catch (error) {
-      Alert.alert(
-        "Authentication Failed",
-        "Could not create user, please check your inputs and try again."
-      );
+      if (error.response.data.error.message === "EMAIL_EXISTS") {
+        Alert.alert(
+          "User Exists",
+          "An account with this email already exists, please log in."
+        );
+      } else {
+        Alert.alert(
+          "Authentication Failed",
+          "Could not create user, please check your inputs and try again."
+        );
+      }
       setIsAuthenticating(false);
     }
   }
 
+  // Spinner while Authenticating
   if (isAuthenticating) {
     return <LoadingOverlay />;
   }

@@ -6,7 +6,7 @@ import authReducer from "./authSlice";
 
 export const store = configureStore({
   reducer: {
-    favoriteRecipes: favoritesReducer,
+    favorites: favoritesReducer,
     recipes: recipeReducer,
     authenticated: authReducer,
   },

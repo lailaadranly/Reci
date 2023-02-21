@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
+import DropDownPicker from "react-native-dropdown-picker";
 import { IconButton } from "react-native-paper";
 
 // Other Files & Components
@@ -21,35 +22,28 @@ import { fetchRecipes } from "../util/http";
 
 export default function RecipeInput({
   recipeInvalid,
-  isUpdate,
-  Category,
-  Recipe,
   onAddRecipe,
+  isUpdate,
+  Recipe,
   onUpdateRecipe,
 }) {
+  // Constants
   // Create Recipe Object
-  const [recipe, setRecipe] = useState({
+  let [recipe, setRecipe] = useState({
     id: null,
     name: "",
     ingredients: "",
     steps: "",
-    category: "",
+    favorite: false,
+    totalTime: "",
+    numServed: "",
   });
 
-  const { name: nameIsInvalid, category: categoryIsInvalid } = recipeInvalid;
-
-  let [selectedCategory, setSelectedCategory] = useState("");
-
-  // Set Categories
-  const categories = [
-    { label: "Breakfast", value: "Breakfast" },
-    { label: "Lunch", value: "Lunch" },
-    { label: "Dinner", value: "Dinner" },
-    { label: "Snack", value: "Snack" },
-    { label: "Appetizer", value: "Appetizer" },
-    { label: "Dessert", value: "Dessert" },
-    { label: "Drinks", value: "Drinks" },
-  ];
+  const {
+    name: nameIsInvalid,
+    totalTime: timeIsInvalid,
+    numServed: numServedInvalid,
+  } = recipeInvalid;
 
   useEffect(() => {
     // Auto-populate inputs from selected recipe
@@ -58,14 +52,13 @@ export default function RecipeInput({
         const recipes = await fetchRecipes();
         const id = recipes.findIndex((recipe) => recipe.id === Recipe.id);
         setRecipe(recipes[id]);
-        setSelectedCategory(Category);
-        recipeSelectHandler(selectedCategory);
       }
 
       void getRecipe();
     }
   }, []);
 
+  // Gather input for recipe
   function recipeInputHandler(inputIdentifier, enteredValue) {
     setRecipe((currentInputValues) => {
       return {
@@ -75,15 +68,7 @@ export default function RecipeInput({
     });
   }
 
-  function recipeSelectHandler() {
-    setRecipe((currentInputValues) => {
-      return {
-        ...currentInputValues,
-        category: selectedCategory,
-      };
-    });
-  }
-
+  // Add Recipe (Callback to Create Recipe)
   function addRecipeHandler() {
     onAddRecipe(recipe);
 
@@ -92,10 +77,13 @@ export default function RecipeInput({
       name: "",
       ingredients: "",
       steps: "",
-      category: "",
+      totalTime: "",
+      numServed: "",
+      favorite: false,
     });
   }
 
+  // Update Recipe (Callback to Create Recipe)
   function updateRecipeHandler() {
     onUpdateRecipe(recipe);
   }
@@ -121,23 +109,30 @@ export default function RecipeInput({
               maxLength={35}
             />
           </View>
-          <Text style={styles.individualLabel}>Category</Text>
-          <View
-            style={
-              categoryIsInvalid
-                ? styles.selectContainerError
-                : styles.selectContainer
-            }
-          >
-            <RNPickerSelect
-              onValueChange={(value) => setSelectedCategory(value)}
-              items={categories}
-              onDonePress={recipeSelectHandler}
-              value={selectedCategory}
-              placeholder={{
-                label: Category,
-                value: Category,
-              }}
+          <View style={styles.inputContainer}>
+            <Text>Total Time (Minutes)</Text>
+            <TextInput
+              name="totalTime"
+              style={timeIsInvalid ? styles.inputSmallError : styles.inputSmall}
+              multiline={false}
+              onChangeText={recipeInputHandler.bind(this, "totalTime")}
+              value={recipe.totalTime}
+              inputMode="numeric"
+              maxLength={35}
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <Text>Number of People Served / Quantity</Text>
+            <TextInput
+              name="numServed"
+              style={
+                numServedInvalid ? styles.inputSmallError : styles.inputSmall
+              }
+              multiline={false}
+              onChangeText={recipeInputHandler.bind(this, "numServed")}
+              value={recipe.numServed}
+              inputMode="numeric"
+              maxLength={35}
             />
           </View>
           <View style={styles.inputContainer}>
@@ -164,28 +159,27 @@ export default function RecipeInput({
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      <View style={styles.buttonContainer}>
-        {!isUpdate ? (
-          <View>
-            <IconButton
-              size={40}
-              icon="check"
-              iconColor={colors.white}
-              backgroundColor={colors.actionBold}
-              onPress={addRecipeHandler}
-            />
-          </View>
-        ) : null}
-        {isUpdate ? (
-          <IconButton
-            size={40}
-            icon="content-save"
-            iconColor={colors.white}
-            backgroundColor={colors.actionBold}
-            onPress={updateRecipeHandler}
-          />
-        ) : null}
-      </View>
+
+      {!isUpdate ? (
+        <IconButton
+          size={60}
+          icon="check-circle"
+          iconColor={colors.actionBold}
+          onPress={addRecipeHandler}
+          style={{
+            left: 130,
+          }}
+        />
+      ) : null}
+
+      {isUpdate ? (
+        <IconButton
+          size={50}
+          icon="check-circle"
+          iconColor={colors.actionBold}
+          onPress={updateRecipeHandler}
+        />
+      ) : null}
     </View>
   );
 }
@@ -193,26 +187,23 @@ export default function RecipeInput({
 const styles = StyleSheet.create({
   buttonContainer: {
     position: "absolute",
-    marginHorizontal: 60,
-    marginVertical: 593,
+    width: "100%",
   },
   backgroundContainer: {
-    width: "100%",
-    flex: 1,
-  },
-  container: {
     width: "90%",
     flex: 1,
+    height: "85%",
+    backgroundColor: colors.white,
+  },
+  container: {
+    width: "100%",
+    flex: 1,
+    alignItems: "center",
   },
   inputContainer: {
     width: "100%",
     alignItems: "flex-start",
     marginVertical: 20,
-  },
-  individualLabel: {
-    width: "90%",
-    alignItems: "flex-start",
-    marginVertical: 5,
   },
   inputLarge: {
     borderWidth: 1,
@@ -220,7 +211,7 @@ const styles = StyleSheet.create({
     borderColor: colors.grey,
     padding: 8,
     width: "100%",
-    height: 150,
+    height: 200,
     borderRadius: 5,
     padding: 10,
     top: 5,
@@ -246,29 +237,5 @@ const styles = StyleSheet.create({
     padding: 10,
     top: 5,
     alignItems: "center",
-  },
-  selectContainer: {
-    fontSize: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: colors.grey,
-    backgroundColor: colors.grey,
-    borderRadius: 5,
-    color: "black",
-    paddingRight: 30,
-    width: "100%",
-  },
-  selectContainerError: {
-    fontSize: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: colors.errorRed,
-    backgroundColor: colors.grey,
-    borderRadius: 5,
-    color: "black",
-    paddingRight: 30,
-    width: "100%",
   },
 });

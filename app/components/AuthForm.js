@@ -115,10 +115,9 @@ export default function AuthForm({ onSubmit, isLogin, credentialsInvalid }) {
       <View style={styles.buttonContainer}>
         <View>
           <IconButton
-            size={40}
-            icon="check"
-            iconColor={colors.white}
-            backgroundColor={colors.actionBold}
+            size={60}
+            icon="check-circle"
+            iconColor={colors.actionBold}
             onPress={submitHandler}
           />
         </View>
@@ -130,7 +129,8 @@ export default function AuthForm({ onSubmit, isLogin, credentialsInvalid }) {
 const styles = StyleSheet.create({
   buttonContainer: {
     position: "absolute",
-    marginVertical: 430,
+    marginHorizontal: -10,
+    marginVertical: 420,
     flexDirection: "row",
     alignItems: "center",
   },

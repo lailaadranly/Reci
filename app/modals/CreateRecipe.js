@@ -1,5 +1,5 @@
 // React
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 // React Native
 import {
@@ -7,8 +7,8 @@ import {
   Text,
   View,
   SafeAreaView,
-  Pressable,
   Alert,
+  Modal,
 } from "react-native";
 import { IconButton } from "react-native-paper";
 
@@ -21,36 +21,37 @@ import { addRecipe } from "../store/recipesSlice";
 import colors from "../config/colors";
 import RecipeInput from "../components/RecipeInput";
 import LoadingOverlay from "../components/LoadingOverlay";
+import Upload from "../modals/Upload";
 
-export default function CreateRecipe({
-  navigation,
-  navigation: { goBack },
-  route,
-}) {
+export default function CreateRecipe(props) {
+  // Constants
   let [recipeList, setRecipeList] = useState([]);
+  const [modalIsVisible, setModalIsVisible] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useDispatch();
-
   const [recipeInvalid, setRecipeInvalid] = useState({
     name: false,
-    category: false,
   });
 
+  // Add Recipe in Database and Store in Memory
   async function addRecipeHandler(recipe) {
     // Validate Recipe Inputs
-    let { name, category, ingredients, steps } = recipe;
+    let { name, ingredients, steps, favorite, totalTime, numServed } = recipe;
 
     const nameIsValid = name.length > 0;
-    const categoryIsValid = category != "";
+    const timeIsValid = totalTime.length > 0;
+    const numServedIsValid = numServed.length > 0;
 
-    if (!nameIsValid || !categoryIsValid) {
+    if (!nameIsValid || !timeIsValid || !numServedIsValid) {
       Alert.alert(
         "Recipe Incomplete",
-        "Please enter a name and category before saving."
+        "Please enter a name, total time, and number served before saving."
       );
       setRecipeInvalid({
         name: !nameIsValid,
-        category: !categoryIsValid,
+        totalTime: !timeIsValid,
+        numServed: !numServedIsValid,
       });
       return;
     }
@@ -62,26 +63,31 @@ export default function CreateRecipe({
         name: recipe.name,
         ingredients: recipe.ingredients,
         steps: recipe.steps,
-        category: recipe.category,
+        favorite: recipe.favorite,
+        totalTime: recipe.totalTime,
+        numServed: recipe.numServed,
       },
     ]);
     setIsSubmitting(true);
 
-    // POST to Firebase (Change to Google Cloud)
+    // Post to Firebase
     const id = await storeRecipe(recipe);
     setIsSubmitting(false);
 
     // Store in Redux context with id from Firebase
     dispatch(addRecipe({ ...recipe, id: id }));
+
+    props.closeModal();
   }
 
-  useEffect(() => {
-    setRecipeList(route.params.list);
+  // Set Create Recipe Modal Visibility
+  function startUploadRecipeHandler() {
+    setModalIsVisible(true);
+  }
 
-    if (recipeList.length > route.params.list.length) {
-      navigation.navigate("MyCookbook");
-    }
-  }, [recipeList]);
+  function endUploadRecipeHandler() {
+    setModalIsVisible(false);
+  }
 
   // Display Spinner when Fetching
   if (isSubmitting) {
@@ -89,26 +95,38 @@ export default function CreateRecipe({
   }
 
   return (
-    <View style={styles.background}>
-      <SafeAreaView style={styles.backgroundContainer}>
-        <View style={styles.headerBanner}>
+    <Modal visible={props.visible} animationType="slide" avoidKeyboard={true}>
+      <SafeAreaView style={styles.background}>
+        <Upload visible={modalIsVisible} closeModal={endUploadRecipeHandler} />
+
+        <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>Add New Recipe</Text>
+          <IconButton
+            size={35}
+            icon="upload"
+            iconColor={colors.white}
+            onPress={startUploadRecipeHandler}
+          />
         </View>
-        <RecipeInput
-          onAddRecipe={addRecipeHandler}
-          recipeInvalid={recipeInvalid}
-        />
+
+        <View style={styles.displayContainer}>
+          <RecipeInput
+            onAddRecipe={addRecipeHandler}
+            recipeInvalid={recipeInvalid}
+          />
+        </View>
+
         <View style={styles.buttonContainer}>
           <IconButton
-            size={40}
+            size={35}
             icon="cancel"
             iconColor={colors.white}
             backgroundColor={colors.errorRed}
-            onPress={() => goBack()}
+            onPress={props.closeModal}
           />
         </View>
       </SafeAreaView>
-    </View>
+    </Modal>
   );
 }
 
@@ -131,21 +149,24 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     position: "absolute",
-    left: 10,
-    marginVertical: 683,
+    left: 33,
+    marginVertical: 745,
   },
-  headerBanner: {
-    backgroundColor: colors.actionLight,
-    width: "100%",
-    height: 50,
-    marginVertical: 20,
+  displayContainer: {
+    backgroundColor: colors.white,
+    width: "90%",
+    height: "93%",
+    borderRadius: 20,
+  },
+  headerContainer: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    width: "90%",
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    justifyContent: "center",
     color: colors.white,
-    top: 10,
   },
 });

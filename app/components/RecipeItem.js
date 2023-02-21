@@ -11,7 +11,6 @@ import colors from "../config/colors";
 
 export default function RecipeItem({ Recipe, onDeleteRecipe }) {
   const navigation = useNavigation();
-
   const [showDelete, setShowDelete] = useState(false);
 
   function deleteRecipeHandler() {
@@ -68,17 +67,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     position: "absolute",
-    top: 5,
-    right: 16,
+    top: 4,
+    right: 0.1,
     borderRadius: 4,
   },
   recipe: {
     backgroundColor: colors.offWhite,
     height: 40,
-    width: "90%",
+    width: "100%",
     borderRadius: 4,
     alignItems: "flex-start",
-    margin: 5,
+    margin: 4,
+    borderColor: colors.white,
+    borderWidth: 2,
   },
   recipeText: {
     marginLeft: 10,

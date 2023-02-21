@@ -16,9 +16,11 @@ import AuthContent from "../components/AuthContent";
 import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function Login({ navigation }) {
+  // Constants
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const dispatch = useDispatch();
 
+  // Login
   async function loginHandler({ email, password }) {
     setIsAuthenticating(true);
     try {
@@ -35,6 +37,7 @@ export default function Login({ navigation }) {
     }
   }
 
+  // Spinner while Authenticating
   if (isAuthenticating) {
     return <LoadingOverlay />;
   }

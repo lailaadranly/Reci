@@ -9,28 +9,33 @@ import {
   SafeAreaView,
   FlatList,
   Pressable,
-  Image,
 } from "react-native";
 import { IconButton } from "react-native-paper";
 
 // Redux
-import { fetchRecipes, deleteRecipe } from "../util/http";
-import { setRecipes, removeRecipe } from "../store/recipesSlice";
-import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../store/authSlice";
+import { fetchRecipes } from "../util/http";
+import { setRecipes } from "../store/recipesSlice";
+import { useDispatch } from "react-redux";
 
 // Other Files & Components
-import RecipeItem from "../components/RecipeItem";
 import LoadingOverlay from "../components/LoadingOverlay";
 import colors from "../config/colors";
+import CategoryTile from "../components/CategoryTile";
+import CreateRecipe from "../modals/CreateRecipe";
 
 export default function MyCookbook({ navigation }) {
+  // Constants
   const [isFetching, setIsFetching] = useState(true);
   const dispatch = useDispatch();
-  const recipeList = useSelector((state) => state.recipes.allRecipes);
+  const [modalIsVisible, setModalIsVisible] = useState(false);
 
+  const types = [
+    { label: "All Recipes", index: 1 },
+    { label: "Favorites", index: 2 },
+  ];
+
+  // Retrieve Recipes from Firebase and Set in Memory
   useEffect(() => {
-    // GET data from Firebase
     async function getRecipes() {
       setIsFetching(true);
       const recipes = await fetchRecipes();
@@ -41,13 +46,13 @@ export default function MyCookbook({ navigation }) {
     void getRecipes();
   }, []);
 
-  async function deleteRecipeHandler(recipe) {
-    dispatch(removeRecipe(recipe));
-    await deleteRecipe(recipe.id);
+  // Create Recipe Modal
+  function startAddRecipeHandler() {
+    setModalIsVisible(true);
   }
 
-  function logoutHandler() {
-    dispatch(logout());
+  function endAddRecipeHandler() {
+    setModalIsVisible(false);
   }
 
   // Display Spinner when Fetching
@@ -56,61 +61,49 @@ export default function MyCookbook({ navigation }) {
   }
 
   return (
-    <View style={styles.background}>
-      <SafeAreaView style={styles.backgroundContainer}>
-        <View style={styles.headerBanner}>
-          <Text style={styles.headerTitle}>My Cookbook</Text>
-        </View>
-        <Text style={styles.subheading}>All Recipes</Text>
+    <SafeAreaView style={styles.background}>
+      <CreateRecipe visible={modalIsVisible} closeModal={endAddRecipeHandler} />
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerTitle}>My Cookbook</Text>
+        <IconButton
+          icon="account-circle"
+          iconColor={colors.white}
+          size={35}
+          onPress={() => navigation.navigate("Settings")}
+        />
+      </View>
+
+      <View style={styles.tileContainer}>
         <FlatList
-          data={recipeList}
-          renderItem={(recipeData) => {
-            return (
-              <RecipeItem
-                Recipe={recipeData.item}
-                onDeleteRecipe={deleteRecipeHandler}
-              />
-            );
+          data={types}
+          renderItem={(tileData) => {
+            return <CategoryTile Title={tileData.item.label} />;
           }}
-          keyExtractor={(recipe, index) => {
-            return recipe.id;
+          keyExtractor={(tile, index) => {
+            return tile.index;
           }}
           alwaysBounceVertical={false}
         />
+      </View>
 
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-          }}
+      <View style={styles.buttonContainer}>
+        <Pressable
+          style={styles.addRecipeBanner}
+          onPress={startAddRecipeHandler}
         >
-          <Pressable
-            style={styles.addRecipeBanner}
-            onPress={() =>
-              navigation.navigate("CreateRecipe", { list: recipeList })
-            }
-          >
-            <Text style={styles.buttonLabel}>Add New Recipe</Text>
-          </Pressable>
-          <IconButton
-            icon="logout"
-            iconColor={colors.actionBold}
-            size={40}
-            onPress={logoutHandler}
-          />
-        </View>
-      </SafeAreaView>
-    </View>
+          <Text style={styles.buttonLabel}>Add New Recipe</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   addRecipeBanner: {
-    backgroundColor: colors.actionLight,
-    width: "60%",
+    backgroundColor: colors.white,
+    width: "50%",
     height: 50,
-    margin: 10,
-    justifyContent: "flex-end",
+    justifyContent: "center",
     marginVertical: 10,
     alignItems: "center",
     borderRadius: 40,
@@ -122,37 +115,27 @@ const styles = StyleSheet.create({
     height: "100%",
     alignItems: "center",
   },
-  backgroundContainer: {
-    backgroundColor: colors.white,
-    width: "90%",
-    height: "90%",
-    marginVertical: 60,
-    borderRadius: 20,
-    alignItems: "center",
-  },
+  buttonContainer: { flexDirection: "row", alignItems: "center" },
   buttonLabel: {
-    fontSize: 24,
-    fontWeight: "bold",
-    justifyContent: "center",
-    color: colors.white,
-    bottom: 10,
+    fontSize: 20,
+    color: colors.actionLight,
   },
-  headerBanner: {
-    backgroundColor: colors.readBold,
-    width: "100%",
-    height: 50,
-    marginVertical: 20,
+  headerContainer: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    width: "90%",
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    justifyContent: "center",
     color: colors.white,
-    top: 10,
   },
-  subheading: {
-    fontWeight: "bold",
-    fontSize: 14,
+  tileContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    width: "90%",
+    flex: 1,
+    alignItems: "flex-start",
   },
 });

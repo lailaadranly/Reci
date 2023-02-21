@@ -17,11 +17,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // Other Files & Components
 import AppLoading from "expo-app-loading";
 import MyCookbook from "./screens/MyCookbook";
-import CreateRecipe from "./screens/CreateRecipe";
+import CreateRecipe from "./modals/CreateRecipe";
 import RecipeDetail from "./screens/RecipeDetail";
+import RecipeList from "./screens/RecipeList";
 import Landing from "./screens/Landing";
 import Login from "./screens/Login";
 import SignUp from "./screens/SignUp";
+import Settings from "./screens/Settings";
 
 const { Navigator, Screen } = createStackNavigator();
 
@@ -51,8 +53,13 @@ function AuthenticatedStack() {
         options={{ headerMode: "none" }}
       />
       <Screen
-        name="CreateRecipe"
-        component={CreateRecipe}
+        name="Settings"
+        component={Settings}
+        options={{ headerMode: "none" }}
+      />
+      <Screen
+        name="RecipeList"
+        component={RecipeList}
         options={{ headerMode: "none" }}
       />
       <Screen
