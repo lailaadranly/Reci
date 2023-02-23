@@ -16,6 +16,7 @@ import { IconButton } from "react-native-paper";
 import { fetchRecipes } from "../util/http";
 import { setRecipes } from "../store/recipesSlice";
 import { useDispatch } from "react-redux";
+import { logout } from "../store/authSlice";
 
 // Other Files & Components
 import LoadingOverlay from "../components/LoadingOverlay";
@@ -34,7 +35,7 @@ export default function MyCookbook({ navigation }) {
     { label: "Favorites", index: 2 },
   ];
 
-  // Retrieve Recipes from Firebase and Set in Memory
+  // Retrieve Recipes from Firebase based on Type and Set in Memory
   useEffect(() => {
     async function getRecipes() {
       setIsFetching(true);
@@ -42,7 +43,7 @@ export default function MyCookbook({ navigation }) {
         const recipes = await fetchRecipes();
         dispatch(setRecipes(recipes));
       } catch (error) {
-        navigation.navigate("Settings");
+        dispatch(logout()); // Needs to be reworked to refresh token if it is not present
       }
       setIsFetching(false);
     }

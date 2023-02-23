@@ -65,7 +65,6 @@ export default function AuthForm({ onSubmit, isLogin, credentialsInvalid }) {
         <Text>Email Address</Text>
         <TextInput
           style={emailIsInvalid ? styles.inputSmallError : styles.inputSmall}
-          multiline={true}
           onChangeText={updateInputValueHandler.bind(this, "email")}
           value={enteredEmail}
           inputMode="email"
@@ -76,7 +75,6 @@ export default function AuthForm({ onSubmit, isLogin, credentialsInvalid }) {
           <Text>Confirm Email Address</Text>
           <TextInput
             style={emailsDontMatch ? styles.inputSmallError : styles.inputSmall}
-            multiline={true}
             onChangeText={updateInputValueHandler.bind(this, "confirmEmail")}
             value={enteredConfirmEmail}
             inputMode="email"

@@ -48,19 +48,23 @@ export default function RecipeDetail({
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
-    async function getRecipe() {
-      const recipes = await fetchRecipes();
-      const id = recipes.findIndex((rec) => rec.id === recipe.id);
-      setRecipe(recipes[id]);
-      setIsFavorite(recipes[id].favorite);
-      setIsUpdating(false);
-    }
-
     void getRecipe();
   }, []);
 
-  function editRecipeHandler() {
-    setIsUpdate(true);
+  async function getRecipe() {
+    const recipes = await fetchRecipes();
+    const id = recipes.findIndex((rec) => rec.id === recipe.id);
+    setRecipe(recipes[id]);
+    setIsFavorite(recipes[id].favorite);
+    setIsUpdating(false);
+  }
+
+  function toggleEditRecipe() {
+    if (isUpdate === true) {
+      setIsUpdate(false);
+    } else {
+      setIsUpdate(true);
+    }
   }
 
   async function updateRecipeHandler(recipe) {
@@ -89,9 +93,9 @@ export default function RecipeDetail({
     dispatch(modifyRecipe(recipe));
     // Post update to Firebase
     await updateRecipe(recipe.id, recipe);
+    void getRecipe();
+    setIsUpdate(false);
     setIsUpdating(false);
-
-    navigation.goBack();
   }
 
   async function deleteRecipeHandler() {
@@ -134,16 +138,11 @@ export default function RecipeDetail({
     <SafeAreaView style={styles.background}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerTitle}>
-          {recipe.name.length >= 22
-            ? recipe.name.slice(0, 21) + "..."
+          {recipe.name.length >= 21
+            ? recipe.name.slice(0, 20) + "..."
             : recipe.name}
         </Text>
-        <IconButton
-          icon={isFavorite ? "star" : "star-outline"}
-          iconColor="white"
-          onPress={changeFavoriteStatusHandler}
-          size={30}
-        />
+
         <IconButton
           icon="arrow-left"
           iconColor={colors.white}
@@ -170,13 +169,27 @@ export default function RecipeDetail({
             size={35}
             icon="square-edit-outline"
             iconColor={colors.white}
-            onPress={editRecipeHandler}
+            onPress={toggleEditRecipe}
+          />
+        ) : null}
+        {isUpdate ? (
+          <IconButton
+            size={35}
+            icon="cancel"
+            iconColor={colors.white}
+            onPress={toggleEditRecipe}
           />
         ) : null}
         <IconButton
           icon="trash-can"
           iconColor={colors.white}
           onPress={deleteRecipeHandler}
+          size={35}
+        />
+        <IconButton
+          icon={isFavorite ? "star" : "star-outline"}
+          iconColor="white"
+          onPress={changeFavoriteStatusHandler}
           size={35}
         />
       </View>

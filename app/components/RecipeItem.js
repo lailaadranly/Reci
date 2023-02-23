@@ -61,8 +61,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   iconContainer: {
-    height: 40,
-    width: 40,
+    height: 45,
+    width: 45,
     backgroundColor: colors.errorRed,
     alignItems: "center",
     justifyContent: "center",
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
   recipe: {
     backgroundColor: colors.offWhite,
-    height: 40,
+    height: 45,
     width: "100%",
     borderRadius: 4,
     alignItems: "flex-start",
@@ -83,7 +83,6 @@ const styles = StyleSheet.create({
   },
   recipeText: {
     marginLeft: 10,
-    marginVertical: 11,
-    maxWidth: 260,
+    marginVertical: 12,
   },
 });

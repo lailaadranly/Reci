@@ -1,5 +1,5 @@
 // React
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 // React Native
 import {
@@ -7,7 +7,6 @@ import {
   Text,
   View,
   SafeAreaView,
-  Pressable,
   Alert,
   Modal,
   TextInput,
@@ -15,36 +14,41 @@ import {
 import { IconButton } from "react-native-paper";
 
 // Redux
-import { storeRecipe } from "../util/http";
-import { useDispatch } from "react-redux";
-import { addRecipe } from "../store/recipesSlice";
+import { extractRecipe } from "../util/extractRecipe";
 
 // Other Files & Components
 import colors from "../config/colors";
-import RecipeInput from "../components/RecipeInput";
 import LoadingOverlay from "../components/LoadingOverlay";
 
-export default function Upload(props, { navigation, route }) {
-  let [recipeList, setRecipeList] = useState([]);
+export default function Upload(props) {
+  const [url, setURL] = useState("");
   const [isUploading, setIsUploading] = useState(false);
-  const dispatch = useDispatch();
-
-  const [recipeInvalid, setRecipeInvalid] = useState({
-    name: false,
-    category: false,
-  });
 
   async function uploadRecipeHandler() {
     setIsUploading(true);
-    // parse link that is uploaded
 
-    // pass back to create recipe
+    const recipeResponse = await extractRecipe(url);
 
-    // pass to recipe input
-
-    setIsUploading(false);
-
-    props.closeModal();
+    try {
+      const recipeResponse = await extractRecipe(url);
+      const extractedRecipe = {
+        id: null,
+        name: recipeResponse.name,
+        ingredients: recipeResponse.recipeIngredient.join("\n"),
+        steps: recipeResponse.recipeInstructions.join("\n"),
+        favorite: false,
+        totalTime: "",
+        numServed: recipeResponse.recipeYield,
+      };
+      setIsUploading(false);
+      props.uploadHandler(extractedRecipe);
+    } catch (error) {
+      setIsUploading(false);
+      Alert.alert(
+        "Upload Failed",
+        "Please ensure you have a valid recipe URL."
+      );
+    }
   }
 
   // Display Spinner when Fetching
@@ -55,14 +59,7 @@ export default function Upload(props, { navigation, route }) {
   return (
     <Modal visible={props.visible} animationType="fade">
       <SafeAreaView style={styles.background}>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            width: "90%",
-          }}
-        >
+        <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>Upload Recipe</Text>
 
           <IconButton
@@ -81,12 +78,14 @@ export default function Upload(props, { navigation, route }) {
         <View style={styles.displayContainer}>
           <View style={styles.inputContainer}>
             <Text>Link</Text>
+            <Text style={{ color: colors.darkGrey, fontSize: 12 }}>
+              Powered by RecipeGrabber.io.
+            </Text>
             <TextInput
-              name="link"
+              name="url"
               style={styles.inputSmall}
-              //multiline={true}
-              //onChangeText={recipeInputHandler.bind(this, "name")}
-              //value={recipe.name}
+              onChangeText={(val) => setURL(val)}
+              value={url}
               inputMode="url"
             />
           </View>
@@ -126,26 +125,11 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     margin: 17,
   },
-  backgroundContainer: {
-    backgroundColor: colors.white,
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     width: "90%",
-    height: "90%",
-    marginVertical: 60,
-    borderRadius: 20,
-    alignItems: "center",
-    position: "absolute",
-  },
-  buttonContainer: {
-    position: "absolute",
-    left: 33,
-    marginVertical: 740,
-  },
-  headerBanner: {
-    backgroundColor: colors.actionLight,
-    width: "100%",
-    height: 50,
-    marginVertical: 20,
-    alignItems: "center",
   },
   headerTitle: {
     fontSize: 24,

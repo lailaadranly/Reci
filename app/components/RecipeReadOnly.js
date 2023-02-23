@@ -13,7 +13,7 @@ export default function RecipeReadOnly({ Recipe }) {
       <ScrollView>
         <View style={styles.readOnlyText}>
           <Text style={styles.smallHeader}>
-            Takes {Recipe.totalTime} minutes for {Recipe.numServed} people
+            Takes {Recipe.totalTime} for {Recipe.numServed}
           </Text>
         </View>
         <View style={styles.readOnlyText}>

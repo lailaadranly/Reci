@@ -61,6 +61,6 @@ export async function deleteRecipe(id) {
   const token = await getToken();
 
   return axios.delete(
-    BACKEND_URL + `./${user}/recipes/${id}.json?auth-` + token
+    BACKEND_URL + `./${user}/recipes/${id}.json?auth=` + token
   );
 }

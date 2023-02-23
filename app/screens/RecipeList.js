@@ -9,7 +9,7 @@ import {
   SafeAreaView,
   FlatList,
   Pressable,
-  Image,
+  RefreshControl,
 } from "react-native";
 import { IconButton } from "react-native-paper";
 
@@ -32,32 +32,37 @@ export default function RecipeList({ navigation: { goBack }, route }) {
   const [isFetching, setIsFetching] = useState(true);
   const [displayRecipes, setDisplayRecipes] = useState([]);
   const [modalIsVisible, setModalIsVisible] = useState(false);
+  const allRecipes = useSelector((state) => state.recipes.allRecipes);
+  const favoriteRecipes = useSelector(
+    (state) => state.favorites.favoriteRecipes
+  );
 
   // Retrieve Recipes from Firebase based on Type and Set in Memory
-  useEffect(() => {
-    async function getRecipes() {
-      setIsFetching(true);
-      const recipes = await fetchRecipes();
-      if (type === "Favorites") {
-        const filteredRecipes = recipes.filter(
-          (recipe) => recipe.favorite === true
-        );
-        setDisplayRecipes(filteredRecipes);
-      } else {
-        setDisplayRecipes(recipes);
-      }
-
-      dispatch(setRecipes(recipes));
-      setIsFetching(false);
+  async function getRecipes() {
+    const recipes = await fetchRecipes();
+    if (type === "Favorites") {
+      const filteredRecipes = recipes.filter(
+        (recipe) => recipe.favorite === true
+      );
+      setDisplayRecipes(filteredRecipes.reverse());
+    } else {
+      setDisplayRecipes(recipes.reverse());
     }
 
+    dispatch(setRecipes(recipes));
+
+    setIsFetching(false);
+  }
+
+  useEffect(() => {
     void getRecipes();
-  }, []);
+  }, [allRecipes]);
 
   // Delete Recipe in Database and in Memory
   async function deleteRecipeHandler(recipe) {
     dispatch(removeRecipe(recipe));
     await deleteRecipe(recipe.id);
+    getRecipes();
   }
 
   // Create Recipe Modal
@@ -96,6 +101,9 @@ export default function RecipeList({ navigation: { goBack }, route }) {
         ) : (
           <FlatList
             data={displayRecipes}
+            refreshControl={
+              <RefreshControl refreshing={isFetching} onRefresh={getRecipes} />
+            }
             renderItem={(recipeData) => {
               return (
                 <RecipeItem

@@ -1,5 +1,5 @@
 // React
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 // React Native
 import {
@@ -11,7 +11,6 @@ import {
   ScrollView,
 } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
-import DropDownPicker from "react-native-dropdown-picker";
 import { IconButton } from "react-native-paper";
 
 // Other Files & Components
@@ -23,9 +22,11 @@ import { fetchRecipes } from "../util/http";
 export default function RecipeInput({
   recipeInvalid,
   onAddRecipe,
+  isUpload,
   isUpdate,
   Recipe,
   onUpdateRecipe,
+  closeModal,
 }) {
   // Constants
   // Create Recipe Object
@@ -53,10 +54,11 @@ export default function RecipeInput({
         const id = recipes.findIndex((recipe) => recipe.id === Recipe.id);
         setRecipe(recipes[id]);
       }
-
       void getRecipe();
+    } else if (isUpload === true) {
+      setRecipe(Recipe);
     }
-  }, []);
+  }, [Recipe]);
 
   // Gather input for recipe
   function recipeInputHandler(inputIdentifier, enteredValue) {
@@ -106,11 +108,11 @@ export default function RecipeInput({
               onChangeText={recipeInputHandler.bind(this, "name")}
               value={recipe.name}
               inputMode="text"
-              maxLength={35}
+              maxLength={60}
             />
           </View>
           <View style={styles.inputContainer}>
-            <Text>Total Time (Minutes)</Text>
+            <Text>Total Time (include units)</Text>
             <TextInput
               name="totalTime"
               style={timeIsInvalid ? styles.inputSmallError : styles.inputSmall}
@@ -122,7 +124,7 @@ export default function RecipeInput({
             />
           </View>
           <View style={styles.inputContainer}>
-            <Text>Number of People Served / Quantity</Text>
+            <Text>Number of Servings</Text>
             <TextInput
               name="numServed"
               style={
@@ -161,15 +163,21 @@ export default function RecipeInput({
       </KeyboardAvoidingView>
 
       {!isUpdate ? (
-        <IconButton
-          size={60}
-          icon="check-circle"
-          iconColor={colors.actionBold}
-          onPress={addRecipeHandler}
-          style={{
-            left: 130,
-          }}
-        />
+        <View style={styles.buttonContainer}>
+          <IconButton
+            size={35}
+            icon="cancel"
+            iconColor={colors.white}
+            backgroundColor={colors.errorRed}
+            onPress={closeModal}
+          />
+          <IconButton
+            size={60}
+            icon="check-circle"
+            iconColor={colors.actionBold}
+            onPress={addRecipeHandler}
+          />
+        </View>
       ) : null}
 
       {isUpdate ? (
@@ -186,8 +194,9 @@ export default function RecipeInput({
 
 const styles = StyleSheet.create({
   buttonContainer: {
-    position: "absolute",
-    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   backgroundContainer: {
     width: "90%",

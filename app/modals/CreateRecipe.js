@@ -1,5 +1,5 @@
 // React
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 // React Native
 import {
@@ -25,14 +25,38 @@ import Upload from "../modals/Upload";
 
 export default function CreateRecipe(props) {
   // Constants
-  let [recipeList, setRecipeList] = useState([]);
   const [modalIsVisible, setModalIsVisible] = useState(false);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useDispatch();
+  let [recipeList, setRecipeList] = useState([]);
   const [recipeInvalid, setRecipeInvalid] = useState({
     name: false,
   });
+  const [uploadedRecipe, setUploadedRecipe] = useState({
+    id: null,
+    name: "",
+    ingredients: "",
+    steps: "",
+    favorite: false,
+    totalTime: "",
+    numServed: "",
+  });
+  const [isUpload, setIsUpload] = useState(false);
+
+  useEffect(() => {
+    // Reset Recipe Input
+    if (props.visible === true) {
+      setUploadedRecipe({
+        id: null,
+        name: "",
+        ingredients: "",
+        steps: "",
+        favorite: false,
+        totalTime: "",
+        numServed: "",
+      });
+    }
+  }, [props.visible]);
 
   // Add Recipe in Database and Store in Memory
   async function addRecipeHandler(recipe) {
@@ -85,7 +109,13 @@ export default function CreateRecipe(props) {
     setModalIsVisible(true);
   }
 
-  function endUploadRecipeHandler() {
+  function closeUploadRecipeHandler() {
+    setModalIsVisible(false);
+  }
+
+  function uploadRecipeHandler(recipe) {
+    setUploadedRecipe(recipe);
+    setIsUpload(true);
     setModalIsVisible(false);
   }
 
@@ -97,7 +127,11 @@ export default function CreateRecipe(props) {
   return (
     <Modal visible={props.visible} animationType="slide" avoidKeyboard={true}>
       <SafeAreaView style={styles.background}>
-        <Upload visible={modalIsVisible} closeModal={endUploadRecipeHandler} />
+        <Upload
+          visible={modalIsVisible}
+          uploadHandler={uploadRecipeHandler}
+          closeModal={closeUploadRecipeHandler}
+        />
 
         <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>Add New Recipe</Text>
@@ -113,16 +147,9 @@ export default function CreateRecipe(props) {
           <RecipeInput
             onAddRecipe={addRecipeHandler}
             recipeInvalid={recipeInvalid}
-          />
-        </View>
-
-        <View style={styles.buttonContainer}>
-          <IconButton
-            size={35}
-            icon="cancel"
-            iconColor={colors.white}
-            backgroundColor={colors.errorRed}
-            onPress={props.closeModal}
+            Recipe={uploadedRecipe}
+            isUpload={isUpload}
+            closeModal={props.closeModal}
           />
         </View>
       </SafeAreaView>
@@ -146,11 +173,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     position: "absolute",
-  },
-  buttonContainer: {
-    position: "absolute",
-    left: 33,
-    marginVertical: 745,
   },
   displayContainer: {
     backgroundColor: colors.white,
